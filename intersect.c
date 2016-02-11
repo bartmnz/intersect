@@ -82,7 +82,7 @@ struct bst_tree* hash_strip( struct hash_table* table ){
  * @PARAM key -- value to be hashed
  * @RETURN -- a unique value based on the input to be used as a hash index.
  */
-uint64_t wang_hash(char* buf){
+uint64_t wang_hash(const char* buf){
     uint64_t key = 0;
 	strncpy((char *)(&key), buf, sizeof(key));
 	key = (~key) + (key << 21); // key = (key << 21) - key - 1;
