@@ -9,12 +9,19 @@
  */
 int bst_prune(struct bst_tree* bonsai){
     if ( ! bonsai ){
-        //error
+        fprintf(stderr, "ERROR: WHAR MY TREE GO??\n");
+        return 0;
     }
-    // if left node prune left
-    // print self
-    // if right node prune right
-    // free self
+    if( bonsai->left ){
+        bst_prune(bonsai->left);
+    }
+    fprintf(stdout, "%s\n", bonsai->value->word);
+    if( bonsai->right ){
+        bst_prune( bonsai->right );
+    }
+    bonsai->left = NULL;
+    bonsai->right = NULL;
+    free(bonsai);
     return 1;
 }
 
