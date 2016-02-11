@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
 struct h_llist {
 	//char *key;
@@ -18,7 +19,7 @@ struct hash_table{
 
 struct element{
     size_t length, count;
-    const char* word;
+    char* word;
 };
 
 struct bst_tree{

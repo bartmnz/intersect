@@ -124,14 +124,35 @@ int hash_insert(struct element *value, struct hash_table* table){
  * @PARAM filename -- name of file to open
  * @RETURN -- 0 on failure else 1;
  */
-int run(struct hash_table* data, const char* filename){
-    if ( ! data || ! filename ){
-        //error 
+int run(struct hash_table* table, const char* filename){
+    if ( ! table || ! filename ){
+        fprintf( stderr, "ERROR: Yo DAWG i heard you like seg-faults so i ....\n ");
+        return 0;
     }
-    // open file for reading 
-    // create value structure 
-    // insert each element into hash table
-    // close file
+    FILE* file;
+    if ( ! (file = fopen(filename, "r"))){ // open file for reading 
+        fprintf(stderr, "ERROR: could not open file. Check filename and permissions.\n");
+        return 0;
+    }
+    struct element* my_element;
+    bool done = false;
+    long temp;
+    char star;
+    int count = 0;
+    while(!done){
+        my_element = malloc( sizeof( *my_element ) );
+        memset( my_element, 0, sizeof( struct element ) );
+        my_element->count = table->item_count;
+        temp = ftell( file );
+        while ( ( star = fgetc( file ) )!= EOF && !isspace( star ) ){
+            count++;
+        }
+        fseek( file, temp, SEEK_SET );
+        my_element->word = malloc( sizeof ( char ) * count );
+        fscanf( file, "%s", my_element->word );
+        hash_insert( my_element, table );
+    }
+    fclose(file);
     return 1;
 }
 
