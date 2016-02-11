@@ -28,19 +28,33 @@ int bst_prune(struct bst_tree* bonsai){
 
 /* Function removes all elements from a hashTable and inserts them into a binary 
  * search tree. Function free's all memory associated with hash_table
- * @PARAM data -- hashTable to remove items from.
+ * @PARAM table -- hashTable to remove items from.
  * @RETURN -- a malloc'd bst_tree containing the data in hash_table or NULL on failure
  */
-struct bst_tree* hash_strip(struct hash_table* data){
-    if( ! data ){
-        //error
+struct bst_tree* hash_strip( struct hash_table* table ){
+    if( ! table ){
+        fprintf(stderr, "ERROR: WHAR MY HASH TABLE GO??\n");
+        return NULL;
     }
-    // allocate new BST
-    // for each element in data
-        // insert element into BST 
-    //set data to NULL
-    //free (data)
-    return NULL;
+    struct bst_tree* bonsai = malloc( sizeof( *bonsai ) );
+    memset( bonsai, 0, sizeof( struct bst_tree ) );
+    bool has_next = false;
+    for ( size_t i = 0; i < table->capacity; i++ ){
+        if ( table->data[i] ){
+            do{
+                has_next = table->data[i]->next;
+                //bst_insert( bonsai, table->data[i]->value ) TODO
+                struct h_llist *temp = table->data[i]->next;
+                table->data[i]->value = NULL;
+                table->data[i]->next = NULL;
+                free( table->data[i] ); 
+                table->data[i] = temp; // reasign head of linked list
+            }while( has_next );
+        }
+    }
+    free( table->data );
+    free( table );
+    return bonsai;
 }
 
 
