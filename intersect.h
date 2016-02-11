@@ -30,6 +30,6 @@ struct bst_tree{
 int bst_prune(struct bst_tree* bonsai);
 void bst_insert( struct bst_tree *tree, struct element *element);
 struct bst_tree* hash_strip(struct hash_table* data);
-uint64_t wang_hash(uint64_t key);
+uint64_t wang_hash(char* buf);
 int hash_insert(struct element *value, struct hash_table* data);
 int run(struct hash_table* data, const char* filename);
