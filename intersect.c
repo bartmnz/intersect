@@ -99,19 +99,21 @@ uint64_t wang_hash(const char* buf){
 /* Function inserts element into the hash table using the string 
  * contained in element as the key. 
  * @PARAM element -- the structure to be inserted into the hash_table
- * @PARAM data -- the hash_table to insert the value into
+ * @PARAM table -- the hash_table to insert the value into
  * @RETURN -- returns 0 on failure, else 1
  */
-int hash_insert(struct element *value, struct hash_table* data){
-    if ( ! value || ! data ) {
-        //error
+int hash_insert(struct element *value, struct hash_table* table){
+    if ( ! value || ! value->word || ! table || ! table->data) {
+        fprintf(stdout, "ERROR: This message should probably be more helpful\n");
+        return 0;
     }
-    //hash value of element
-    //check address of hash 
-    //if data[hash] && data[hash]->count == element->count-1
-        //data[hash]->count = element->count
-    //else if( count == 1)
-        //data[hash] = element
+    int index = 0;
+    index = wang_hash(value->word) % table->capacity;  //hash value of element
+    if ( table->data[index] && table->data[index]->value->count == value->count-1 ){
+        table->data[index]->value->count = value->count;
+    } else if ( value->count == 1 ){
+        table->data[index]->value = value;
+    }
     return 1;
 }
 
