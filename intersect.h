@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 struct h_llist {
 	char *key;
@@ -15,12 +16,12 @@ struct hash_table{
 
 struct element{
     size_t length, count;
-    const char* value;
+    const char* word;
 };
 
 struct bst_tree{
     struct element *value;
-    struct tree *left, *right;
+    struct bst_tree *left, *right;
 };
 
 
