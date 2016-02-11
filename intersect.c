@@ -26,6 +26,23 @@ int bst_prune(struct bst_tree* bonsai){
 }
 
 
+/* Function inserts the element into the bst_tree in alphabetical order
+ * @PARAM tree -- pointer to the tree to insert into
+ * @PARAM element -- element to insert
+ */
+void bst_insert( struct bst_tree *tree, struct element *element){
+    if ( ! tree || ! element ){
+        fprintf( stderr, "ERROR: WTF MATE??? you lost you stuffs\n");
+        return;
+    }
+    int compare = 0;
+    if ( ! tree->value ){
+        tree->value = element;
+    }else if( ( compare = strncmp( tree->value->word, element->word, element->length ) ) < 0 ){
+        bst_insert( tree->left, element );
+    } else( bst_insert( tree->right, element ) );
+}
+
 /* Function removes all elements from a hashTable and inserts them into a binary 
  * search tree. Function free's all memory associated with hash_table
  * @PARAM table -- hashTable to remove items from.
