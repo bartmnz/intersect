@@ -60,7 +60,10 @@ struct bst_tree* hash_strip( struct hash_table* table ){
         if ( table->data[i] ){
             do{
                 has_next = table->data[i]->next;
-                //bst_insert( bonsai, table->data[i]->value ) TODO
+                if ( table ->item_count == table->data[i]->value->count){
+                    // value was in all of the files. 
+                    bst_insert( bonsai, table->data[i]->value );
+                }
                 struct h_llist *temp = table->data[i]->next;
                 table->data[i]->value = NULL;
                 table->data[i]->next = NULL;
