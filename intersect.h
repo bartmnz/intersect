@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 struct h_llist {
-	char *key;
+	//char *key;
 	struct element *value;
 	struct h_llist *next;
 };
