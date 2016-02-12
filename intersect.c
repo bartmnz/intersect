@@ -60,7 +60,7 @@ struct bst_tree* hash_strip( struct hash_table* table ){
         if ( table->data[i] ){
             do{
                 has_next = table->data[i]->next;
-                if ( table ->item_count == table->data[i]->value->count){
+                if ( table->item_count == table->data[i]->value->count){
                     // value was in all of the files. 
                     bst_insert( bonsai, table->data[i]->value );
                 }
@@ -132,17 +132,31 @@ bool same_word(struct element* value, char *string2){
  * @PARAM table -- the hash_table to insert the value into
  * @RETURN -- returns 0 on failure, else 1
  */
-int hash_insert(struct element *value, struct hash_table* table){
-    if ( ! value || ! value->word || ! table || ! table->data) {
+int hash_insert(struct element *element, struct hash_table* table){
+    if ( ! element || ! element->word || ! table || ! table->data) {
         fprintf(stdout, "ERROR: This message should probably be more helpful\n");
         return 0;
     }
     int index = 0;
-    index = wang_hash(value) % table->capacity;  //hash value of element
-    if ( table->data[index] && table->data[index]->value->count == value->count-1 ){
-        table->data[index]->value->count = value->count;
-    } else if ( value->count == 1 ){
-        table->data[index]->value = value;
+    index = wang_hash(element) % table->capacity;  //hash element of element
+    struct h_llist* hash = table->data[index]; 
+    if ( hash ){
+        do{
+            if( same_word( element, hash->value->word ) ){ //got the same word
+                if ( hash->value->count + 1 == element->count ){
+                    hash->value->count++;
+                }
+            }
+            hash = hash->next;
+        }while ( hash->next );
+    }else if ( element->count == 1 ){
+        hash = malloc ( sizeof( *hash ) );
+        if ( !hash ){
+            fprintf(stdout, "ERROR: This message should probably be more helpful\n");
+            return 0;
+        }
+        memset( hash, 0, sizeof( *hash ) );
+        hash->value = element;
     }
     return 1;
 }
