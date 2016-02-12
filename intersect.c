@@ -123,7 +123,7 @@ struct bst_tree* hash_strip( struct hash_table* table ){
  */
 uint64_t wang_hash(struct element* value){
     uint64_t key = 0;
-    char* buf = malloc ( sizeof( char ) * value->length );
+    /*char* buf = malloc ( sizeof( char ) * value->length );
     if ( ! buf ){
         fprintf(stderr, "ERROR: malloc failed \n");
         return 0;
@@ -131,7 +131,16 @@ uint64_t wang_hash(struct element* value){
     for( size_t i = 0; i < value->length; i++ ){
         buf[i] = tolower( value->word[i] );
     }
-	strncpy((char *)(&key), buf, sizeof(key));
+    */
+    strncpy((char *)(&key), value->word, sizeof(key));
+    char *a = (char*)(&key);
+    for (;; a++) {
+        *a = tolower(*a);
+        if ( !*a )
+            break;
+    }
+   
+    
 	key = (~key) + (key << 21); // key = (key << 21) - key - 1;
 	key = key ^ (key >> 24);
 	key = (key + (key << 3)) + (key << 8); // key * 265
@@ -139,7 +148,7 @@ uint64_t wang_hash(struct element* value){
 	key = (key + (key << 2)) + (key << 4); // key * 21
 	key = key ^ (key >> 28);
 	key = key + (key << 31);
-	free( buf );
+	//free( buf );
 	return key;
 }
 
@@ -158,12 +167,11 @@ bool same_word(struct element *value, struct element *string2){
     const char *a, *b;
     a = value->word;
     b = string2->word;
-    printf("(%s) (%s)", a, b);
     for (;; a++, b++) {
         int d = tolower(*a) - tolower(*b);
-        if (d != 0 || !*a)
-            printf( (! d) ? "True\n" : "False\n");
+        if (d != 0 || !*a){
             return ! d;
+        }
     }
     
     /*if ( ! value || ! string2 ){
