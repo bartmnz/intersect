@@ -82,19 +82,14 @@ struct bst_tree* hash_strip( struct hash_table* table ){
     }
     memset( bonsai, 0, sizeof( *bonsai ) );
     
-    printf("here1234\n");
-    
     struct h_llist *temp = NULL; 
     struct h_llist *current = NULL;
-    printf("table capacity is (%zu)\n",table->capacity);
     for ( size_t i = 0; i < table->capacity; i++ ){
-        printf("i (%zu)", i);
         if ( ( current = table->data[i] ) ){
-            printf(" data[%zu]", i);
             do{
                 if ( table->file_count == current->value->count){
                     // value was in all of the files. 
-                    printf("inserting %s\n", current->value->word);
+                    printf("inserting (%s) to bst\n", current->value->word);
                     bst_insert( bonsai, current->value );
                     
                 }
@@ -103,6 +98,7 @@ struct bst_tree* hash_strip( struct hash_table* table ){
                 current->next = NULL;
                 free( current ); 
                 table->data[i] = temp; // reasign head of linked list
+                current = table->data[i];
             }while( temp );
         }
         
@@ -184,16 +180,34 @@ int hash_insert(struct element *element, struct hash_table* table){
     index = wang_hash(element) % table->capacity;  //hash element of element
     struct h_llist* hash = table->data[index]; 
     if ( hash ){
+        bool cont = false;
         do{
             if( same_word( element, hash->value->word ) ){ //got the same word
                 if ( hash->value->count + 1 == element->count ){
                     hash->value->count++;
                 }
+                free(element->word);
+                free(element);
+                return(1);
             }
-            hash = hash->next;
-        }while ( hash );
-        free(element->word);
-        free(element);
+            cont = false;
+            if ( hash->next ){
+                hash = hash->next;
+                cont = true;
+            } 
+        }while ( cont );
+        if ( table->file_count == 1){
+            hash->next = malloc ( sizeof( *hash ) );
+            if ( !hash->next ){
+                fprintf(stdout, "ERROR: This message should probably be more helpful\n");
+                return 0;
+            }
+            memset( hash->next, 0, sizeof( *hash->next ) );
+            hash->next->value = element;
+        }else {
+            free(element->word);
+            free(element);
+        }
     }else if ( table->file_count == 1 ){ //nothing at the index and first file
         hash = malloc ( sizeof( *hash ) );
         if ( !hash ){
@@ -203,10 +217,12 @@ int hash_insert(struct element *element, struct hash_table* table){
         memset( hash, 0, sizeof( *hash ) );
         hash->value = element;
         table->data[index] = hash;
+        
     } else{
         free(element->word);
         free(element);
     }
+    //printf("index (%d), value (%s)\n", index, element->word);
     return 1;
 }
 
@@ -241,14 +257,24 @@ int run(struct hash_table* table, const char* filename){
         memset( my_element, 0, sizeof( *my_element ) );
         my_element->count = table->file_count;
         temp = ftell( file );
-        while ( ( star = fgetc( file ) )!= EOF && !isspace( star ) ){
+        printf("%ld ", temp);
+        while ( ( star = fgetc( file ) )!= EOF ){
             count++;
+            printf("%c ", star);
+            if ( isspace( star ) ){
+                if ( count == 1 ){
+                    count = 0;
+                    continue;
+                }
+                break;
+            }
         }
         if( star == EOF ){
             free(my_element);
-            //printf("end\n");
             break;
         }
+        printf("%ld \n", ftell(file));
+        //count = ftell(file) - temp;
         fseek( file, temp, SEEK_SET );
         my_element->word = malloc( sizeof ( char ) * count + 1 );
         if ( ! my_element->word ){
@@ -258,8 +284,12 @@ int run(struct hash_table* table, const char* filename){
         memset ( my_element->word, 0, sizeof( char ) * count + 1 );
         my_element->length = count + 1;
         fscanf( file, "%s", my_element->word );
-        //printf("%s\n", my_element->word);
+        fseek( file, 1, SEEK_CUR);
+        printf("strlen is (%d) string is (%s)\n", count+1, my_element->word);
+        
         hash_insert( my_element, table );
+        count = 0;
+        
         
     }
     fclose(file);
@@ -324,7 +354,7 @@ int main(int argc, char*argv[]){
     for ( int i = 1; i < argc; i++ ){
         run( table, argv[i] );
     }
-    printf("table capacity is (%zu)\n",table->capacity);
+    printf("making bst\n");
     struct bst_tree* bonsai = hash_strip(table);
     bst_prune(bonsai);
 }
