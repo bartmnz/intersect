@@ -12,7 +12,7 @@ struct h_llist {
 };
 
 struct hash_table{
-	size_t item_count;
+	size_t file_count;
 	size_t capacity;
 	struct h_llist **data;
 };
@@ -35,3 +35,4 @@ uint64_t wang_hash(struct element* value);
 bool same_word(struct element* value, char *string2);
 int hash_insert(struct element *value, struct hash_table* data);
 int run(struct hash_table* data, const char* filename);
+size_t how_big(const char* filename);

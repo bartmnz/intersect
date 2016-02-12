@@ -174,7 +174,7 @@ int run(struct hash_table* table, const char* filename){
         return 0;
     }
     FILE* file;
-    if ( ! (file = fopen(filename, "r"))){ // open file for reading 
+    if ( ! ( file = fopen( filename, "r" ) ) ){ // open file for reading 
         fprintf(stderr, "ERROR: could not open file. Check filename and permissions.\n");
         return 0;
     }
@@ -194,6 +194,10 @@ int run(struct hash_table* table, const char* filename){
         }
         fseek( file, temp, SEEK_SET );
         my_element->word = malloc( sizeof ( char ) * count );
+        if ( !my_element->word ){
+            fprintf(stderr, "ERROR: malloc failed \n");
+            return 0;
+        }
         my_element->length = count;
         fscanf( file, "%s", my_element->word );
         hash_insert( my_element, table );
@@ -202,6 +206,32 @@ int run(struct hash_table* table, const char* filename){
     return 1;
 }
 
+
+/* Function opens a file and counts the number of white spaces in the file to 
+ * determine how many words are in the file see isspace(3) for whitespace
+ * @PARAM filename -- name of file to be opened
+ * @RETURN -- number of whitespaces in the file 
+ */
+size_t how_big(const char* filename){
+    if ( ! filename ){
+        fprintf( stderr, "ERROR: Yo DAWG i heard you like seg-faults so i ....\n ");
+        return 0;
+    }
+    FILE* file;
+    if ( ! ( file = fopen( filename, "r" ) ) ){ // open file for reading 
+        fprintf(stderr, "ERROR: could not open file. Check filename and permissions.\n");
+        return 0;
+    }
+    char star;
+    size_t count = 0;
+    while ( ( star = fgetc( file ) )!= EOF ){
+        if ( isspace( star ) ){
+            count++;
+        }
+    }
+    fclose(file);
+    return count;
+}
 
 /* Function exectuion begins here. Useage is ./intersect FILENAME FILENAME ...
  * Program takes multiple files and finds the words taht are common between
