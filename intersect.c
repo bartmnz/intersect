@@ -37,9 +37,30 @@ void bst_insert( struct bst_tree *tree, struct element *element){
     }
     if ( ! tree->value ){
         tree->value = element;
-    }else if(  strncmp( tree->value->word, element->word, element->length )  < 0 ){
-        bst_insert( tree->left, element );
-    } else( bst_insert( tree->right, element ) );
+    }else if(  strncmp( tree->value->word, element->word, element->length )  > 0 ){
+        if ( tree->left ){
+            bst_insert( tree->left, element );
+        }else {
+            tree->left = malloc( sizeof( *tree->left ) );
+            if ( ! tree->left ){
+                fprintf(stderr, "ERROR: malloc failed \n");
+                return;
+            }
+            memset( tree->left, 0, sizeof( *tree->left ) );
+            tree->left->value = element;
+        }
+        
+    } else if ( tree->right ){
+            bst_insert( tree->right, element );
+    }else {
+        tree->right = malloc( sizeof( *tree->right ) );
+        if ( ! tree->right ){
+            fprintf(stderr, "ERROR: malloc failed \n");
+            return ;
+        }
+        memset( tree->right, 0, sizeof( *tree->right ) );
+        tree->right->value = element;
+    }
 }
 
 /* Function removes all elements from a hashTable and inserts them into a binary 
@@ -53,14 +74,27 @@ struct bst_tree* hash_strip( struct hash_table* table ){
         return NULL;
     }
     struct bst_tree* bonsai = malloc( sizeof( *bonsai ) );
-    memset( bonsai, 0, sizeof( struct bst_tree ) );
-    struct h_llist *temp = NULL, *current = NULL;
+    if ( ! bonsai ){
+        fprintf(stderr, "ERROR: malloc failed \n");
+        return NULL;
+    }
+    memset( bonsai, 0, sizeof( *bonsai ) );
+    
+    printf("here1234\n");
+    
+    struct h_llist *temp = NULL; 
+    struct h_llist *current = NULL;
+    printf("table capacity is (%zu)\n",table->capacity);
     for ( size_t i = 0; i < table->capacity; i++ ){
+        printf("i (%zu)", i);
         if ( ( current = table->data[i] ) ){
+            printf(" data[%zu]", i);
             do{
                 if ( table->file_count == current->value->count){
                     // value was in all of the files. 
+                    printf("inserting %s\n", current->value->word);
                     bst_insert( bonsai, current->value );
+                    
                 }
                 temp = current->next;
                 current->value = NULL;
@@ -69,9 +103,15 @@ struct bst_tree* hash_strip( struct hash_table* table ){
                 table->data[i] = temp; // reasign head of linked list
             }while( temp );
         }
+        
     }
-    free( table->data );
-    free( table );
+    
+    if ( table ){
+        if ( table->data ){
+            free( table->data );
+        }
+        free( table );
+    }
     return bonsai;
 }
 
@@ -122,6 +162,7 @@ bool same_word(struct element* value, char *string2){
         buf[i] = tolower( value->word[i] );
     }
     free( buf );
+    
     return !strncmp( value->word, string2, value->length );
 }
 
@@ -148,8 +189,8 @@ int hash_insert(struct element *element, struct hash_table* table){
                 }
             }
             hash = hash->next;
-        }while ( hash->next );
-    }else if ( element->count == 1 ){ //nothing at the index and first file
+        }while ( hash );
+    }else if ( table->file_count == 1 ){ //nothing at the index and first file
         hash = malloc ( sizeof( *hash ) );
         if ( !hash ){
             fprintf(stdout, "ERROR: This message should probably be more helpful\n");
@@ -157,6 +198,7 @@ int hash_insert(struct element *element, struct hash_table* table){
         }
         memset( hash, 0, sizeof( *hash ) );
         hash->value = element;
+        table->data[index] = hash;
     }
     return 1;
 }
@@ -203,8 +245,10 @@ int run(struct hash_table* table, const char* filename){
         }
         my_element->length = count;
         fscanf( file, "%s", my_element->word );
+        //printf("%s\n", my_element->word);
         hash_insert( my_element, table );
         if( star == EOF ){
+            //printf("end\n");
             break;
         }
     }
@@ -236,7 +280,8 @@ size_t how_big(const char* filename){
         }
     }
     fclose(file);
-    return count;
+    //printf("%zu\n", count );
+    return count + count % 3;
 }
 
 /* Function exectuion begins here. Useage is ./intersect FILENAME FILENAME ...
@@ -269,6 +314,7 @@ int main(int argc, char*argv[]){
     for ( int i = 1; i < argc; i++ ){
         run( table, argv[i] );
     }
+    printf("table capacity is (%zu)\n",table->capacity);
     struct bst_tree* bonsai = hash_strip(table);
     bst_prune(bonsai);
 }
