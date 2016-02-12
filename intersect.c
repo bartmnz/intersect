@@ -105,6 +105,26 @@ uint64_t wang_hash(struct element* value){
 	return key;
 }
 
+/* Function compares two strings case independent
+ * @PARAM value -- structure containing first string to be checked
+ * @PARAM string2 -- second string to be checked
+ * @RETURN -- true if strings are the same
+ */
+bool same_word(struct element* value, char *string2){
+    if ( ! value || ! string2 ){
+        fprintf( stderr, "ERROR: aborting\n");
+        return false;
+    }
+    char* buf = malloc ( sizeof( char ) * value->length );
+    if ( ! buf ){
+        fprintf( stderr, "ERROR: aborting\n");
+        return false;
+    }
+    for( size_t i = 0; i < value->length; i++ ){
+        buf[i] = tolower( value->word[i] );
+    }
+    return !strncmp( value->word, string2, value->length );
+}
 
 /* Function inserts element into the hash table using the string 
  * contained in element as the key. 
