@@ -35,10 +35,9 @@ void bst_insert( struct bst_tree *tree, struct element *element){
         fprintf( stderr, "ERROR: WTF MATE??? you lost you stuffs\n");
         return;
     }
-    int compare = 0;
     if ( ! tree->value ){
         tree->value = element;
-    }else if( ( compare = strncmp( tree->value->word, element->word, element->length ) ) < 0 ){
+    }else if(  strncmp( tree->value->word, element->word, element->length )  < 0 ){
         bst_insert( tree->left, element );
     } else( bst_insert( tree->right, element ) );
 }
@@ -55,21 +54,20 @@ struct bst_tree* hash_strip( struct hash_table* table ){
     }
     struct bst_tree* bonsai = malloc( sizeof( *bonsai ) );
     memset( bonsai, 0, sizeof( struct bst_tree ) );
-    bool has_next = false;
+    struct h_llist *temp = NULL, *current = NULL;
     for ( size_t i = 0; i < table->capacity; i++ ){
-        if ( table->data[i] ){
+        if ( ( current = table->data[i] ) ){
             do{
-                has_next = table->data[i]->next;
-                if ( table->file_count == table->data[i]->value->count){
+                if ( table->file_count == current->value->count){
                     // value was in all of the files. 
-                    bst_insert( bonsai, table->data[i]->value );
+                    bst_insert( bonsai, current->value );
                 }
-                struct h_llist *temp = table->data[i]->next;
-                table->data[i]->value = NULL;
-                table->data[i]->next = NULL;
-                free( table->data[i] ); 
+                temp = current->next;
+                current->value = NULL;
+                current->next = NULL;
+                free( current ); 
                 table->data[i] = temp; // reasign head of linked list
-            }while( has_next );
+            }while( temp );
         }
     }
     free( table->data );
@@ -123,8 +121,10 @@ bool same_word(struct element* value, char *string2){
     for( size_t i = 0; i < value->length; i++ ){
         buf[i] = tolower( value->word[i] );
     }
+    free( buf );
     return !strncmp( value->word, string2, value->length );
 }
+
 
 /* Function inserts element into the hash table using the string 
  * contained in element as the key. 
@@ -149,7 +149,7 @@ int hash_insert(struct element *element, struct hash_table* table){
             }
             hash = hash->next;
         }while ( hash->next );
-    }else if ( element->count == 1 ){
+    }else if ( element->count == 1 ){ //nothing at the index and first file
         hash = malloc ( sizeof( *hash ) );
         if ( !hash ){
             fprintf(stdout, "ERROR: This message should probably be more helpful\n");
@@ -180,12 +180,15 @@ int run(struct hash_table* table, const char* filename){
     }
     table->file_count++; // keep track of the number of files we have looked at
     struct element* my_element;
-    bool done = false;
     long temp;
     char star;
     int count = 0;
-    while(!done){
+    while( true ){
         my_element = malloc( sizeof( *my_element ) );
+        if ( ! my_element ){
+            fprintf(stderr, "ERROR: malloc failed \n");
+            exit(0);
+        }
         memset( my_element, 0, sizeof( *my_element ) );
         my_element->count = table->file_count;
         temp = ftell( file );
@@ -194,13 +197,16 @@ int run(struct hash_table* table, const char* filename){
         }
         fseek( file, temp, SEEK_SET );
         my_element->word = malloc( sizeof ( char ) * count );
-        if ( !my_element->word ){
+        if ( ! my_element->word ){
             fprintf(stderr, "ERROR: malloc failed \n");
-            return 0;
+            exit(0);
         }
         my_element->length = count;
         fscanf( file, "%s", my_element->word );
         hash_insert( my_element, table );
+        if( star == EOF ){
+            break;
+        }
     }
     fclose(file);
     return 1;
@@ -243,15 +249,23 @@ size_t how_big(const char* filename){
  * @RETURN -- returns 0 on failure, else 1
  */
 int main(int argc, char*argv[]){
-    if( argc < 2 || argv == NULL ){
-        //error message
-    }
     if ( argc < 2 ){
         fprintf(stderr, "ERROR: useage is ./intersect FILENAME FILENAME ...\n");
         exit(0);
     }
     struct hash_table* table = malloc ( sizeof( *table ) );
+    if ( ! table ){
+        fprintf(stderr, "ERROR: malloc failed \n");
+        exit(0);
+    }
     memset( table, 0, sizeof( *table ) );
+    table->capacity = how_big( argv[1] );
+    table->data = malloc( sizeof( *table->data ) * table->capacity );
+    if ( ! table->data ){
+        fprintf(stderr, "ERROR: malloc failed \n");
+        exit(0);
+    }
+    memset( table->data, 0, sizeof( *table->data ) * table->capacity );
     for ( int i = 1; i < argc; i++ ){
         run( table, argv[i] );
     }
