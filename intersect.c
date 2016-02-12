@@ -170,12 +170,15 @@ int main(int argc, char*argv[]){
     if( argc < 2 || argv == NULL ){
         //error message
     }
-    // verify input
-    // allocate space for hash_table
-    // do while count = 1 < argc-1
-        //run()
-        //count ++
-    // bst = hash_strip
-    // print bst
-    // exit
+    if ( argc < 2 ){
+        fprintf(stderr, "ERROR: useage is ./intersect FILENAME FILENAME ...\n");
+        exit(0);
+    }
+    struct hash_table* table = malloc ( sizeof( *table ) );
+    memset( table, 0, sizeof( *table ) );
+    for ( int i = 1; i < argc; i++ ){
+        run( table, argv[i] );
+    }
+    struct bst_tree* bonsai = hash_strip(table);
+    bst_prune(bonsai);
 }
