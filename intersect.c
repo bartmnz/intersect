@@ -60,7 +60,7 @@ struct bst_tree* hash_strip( struct hash_table* table ){
         if ( table->data[i] ){
             do{
                 has_next = table->data[i]->next;
-                if ( table->item_count == table->data[i]->value->count){
+                if ( table->file_count == table->data[i]->value->count){
                     // value was in all of the files. 
                     bst_insert( bonsai, table->data[i]->value );
                 }
@@ -178,6 +178,7 @@ int run(struct hash_table* table, const char* filename){
         fprintf(stderr, "ERROR: could not open file. Check filename and permissions.\n");
         return 0;
     }
+    table->file_count++; // keep track of the number of files we have looked at
     struct element* my_element;
     bool done = false;
     long temp;
@@ -185,8 +186,8 @@ int run(struct hash_table* table, const char* filename){
     int count = 0;
     while(!done){
         my_element = malloc( sizeof( *my_element ) );
-        memset( my_element, 0, sizeof( struct element ) );
-        my_element->count = table->item_count;
+        memset( my_element, 0, sizeof( *my_element ) );
+        my_element->count = table->file_count;
         temp = ftell( file );
         while ( ( star = fgetc( file ) )!= EOF && !isspace( star ) ){
             count++;
