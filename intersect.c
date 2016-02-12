@@ -89,9 +89,11 @@ struct bst_tree* hash_strip( struct hash_table* table ){
             do{
                 if ( table->file_count == current->value->count){
                     // value was in all of the files. 
-                    printf("inserting (%s) to bst\n", current->value->word);
                     bst_insert( bonsai, current->value );
                     
+                }else {
+                    free(current->value->word);
+                    free(current->value);
                 }
                 temp = current->next;
                 current->value = NULL;
@@ -146,22 +148,36 @@ uint64_t wang_hash(struct element* value){
  * @PARAM string2 -- second string to be checked
  * @RETURN -- true if strings are the same
  */
-bool same_word(struct element* value, char *string2){
+bool same_word(struct element *value, struct element *string2){
     if ( ! value || ! string2 ){
         fprintf( stderr, "ERROR: aborting\n");
         return false;
+    } else if( value->length != string2->length ){
+        return false;
     }
-    char* buf = malloc ( sizeof( char ) * value->length );
-    if ( ! buf ){
+    char* buf1 = malloc ( sizeof( char ) * value->length );
+    if ( ! buf1 ){
         fprintf( stderr, "ERROR: aborting\n");
         return false;
     }
     for( size_t i = 0; i < value->length; i++ ){
-        buf[i] = tolower( value->word[i] );
+        buf1[i] = tolower( value->word[i] );
     }
-    free( buf );
     
-    return !strncmp( value->word, string2, value->length );
+    char* buf2 = malloc ( sizeof( char ) * string2->length );
+    if ( ! buf2 ){
+        fprintf( stderr, "ERROR: aborting\n");
+        free( buf1 );
+        return false;
+    }
+    for( size_t i = 0; i < string2->length; i++ ){
+        buf2[i] = tolower( string2->word[i] );
+    }
+    bool rValue = !strncmp( buf1, buf2, value->length );
+    free( buf1 );
+    free( buf2 );
+    
+    return rValue;
 }
 
 
@@ -181,21 +197,25 @@ int hash_insert(struct element *element, struct hash_table* table){
     struct h_llist* hash = table->data[index]; 
     if ( hash ){
         bool cont = false;
+        //traverse the linked list
         do{
-            if( same_word( element, hash->value->word ) ){ //got the same word
+            if( same_word( element, hash->value ) ){ //got the same word
                 if ( hash->value->count + 1 == element->count ){
                     hash->value->count++;
                 }
+               // printf("free index (%d), value (%s)\n", index, element->word);
                 free(element->word);
                 free(element);
                 return(1);
             }
+            //have more to check
             cont = false;
             if ( hash->next ){
                 hash = hash->next;
                 cont = true;
             } 
         }while ( cont );
+        //at the end of the linked list and haven't found a match
         if ( table->file_count == 1){
             hash->next = malloc ( sizeof( *hash ) );
             if ( !hash->next ){
@@ -205,9 +225,11 @@ int hash_insert(struct element *element, struct hash_table* table){
             memset( hash->next, 0, sizeof( *hash->next ) );
             hash->next->value = element;
         }else {
+           // printf("free index (%d), value (%s)\n", index, element->word);
             free(element->word);
             free(element);
         }
+    
     }else if ( table->file_count == 1 ){ //nothing at the index and first file
         hash = malloc ( sizeof( *hash ) );
         if ( !hash ){
@@ -218,7 +240,8 @@ int hash_insert(struct element *element, struct hash_table* table){
         hash->value = element;
         table->data[index] = hash;
         
-    } else{
+    } else{ // we don't need this info. 
+        //printf("free index (%d), value (%s)\n", index, element->word);
         free(element->word);
         free(element);
     }
@@ -257,10 +280,8 @@ int run(struct hash_table* table, const char* filename){
         memset( my_element, 0, sizeof( *my_element ) );
         my_element->count = table->file_count;
         temp = ftell( file );
-        printf("%ld ", temp);
         while ( ( star = fgetc( file ) )!= EOF ){
             count++;
-            printf("%c ", star);
             if ( isspace( star ) ){
                 if ( count == 1 ){
                     count = 0;
@@ -269,24 +290,22 @@ int run(struct hash_table* table, const char* filename){
                 break;
             }
         }
-        if( star == EOF ){
+        if( star == EOF ){//&& ftell( file ) == temp ){
+            //printf("(%ld) (%ld)\n", temp, ftell( file ));
             free(my_element);
             break;
         }
-        printf("%ld \n", ftell(file));
-        //count = ftell(file) - temp;
         fseek( file, temp, SEEK_SET );
         my_element->word = malloc( sizeof ( char ) * count + 1 );
         if ( ! my_element->word ){
             fprintf(stderr, "ERROR: malloc failed \n");
+            free( my_element );
             exit(0);
         }
         memset ( my_element->word, 0, sizeof( char ) * count + 1 );
         my_element->length = count + 1;
         fscanf( file, "%s", my_element->word );
-        fseek( file, 1, SEEK_CUR);
-        printf("strlen is (%d) string is (%s)\n", count+1, my_element->word);
-        
+        //fseek( file, 1, SEEK_CUR);
         hash_insert( my_element, table );
         count = 0;
         
@@ -352,9 +371,10 @@ int main(int argc, char*argv[]){
     }
     memset( table->data, 0, sizeof( *table->data ) * table->capacity );
     for ( int i = 1; i < argc; i++ ){
+       // printf("(%d)\n",i);
         run( table, argv[i] );
     }
-    printf("making bst\n");
+    printf("bst\n");
     struct bst_tree* bonsai = hash_strip(table);
     bst_prune(bonsai);
 }
