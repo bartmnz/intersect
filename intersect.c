@@ -21,6 +21,8 @@ int bst_prune(struct bst_tree* bonsai){
     }
     bonsai->left = NULL;
     bonsai->right = NULL;
+    free(bonsai->value->word);
+    free(bonsai->value);
     free(bonsai);
     return 1;
 }
@@ -190,6 +192,8 @@ int hash_insert(struct element *element, struct hash_table* table){
             }
             hash = hash->next;
         }while ( hash );
+        free(element->word);
+        free(element);
     }else if ( table->file_count == 1 ){ //nothing at the index and first file
         hash = malloc ( sizeof( *hash ) );
         if ( !hash ){
@@ -199,6 +203,9 @@ int hash_insert(struct element *element, struct hash_table* table){
         memset( hash, 0, sizeof( *hash ) );
         hash->value = element;
         table->data[index] = hash;
+    } else{
+        free(element->word);
+        free(element);
     }
     return 1;
 }
@@ -237,20 +244,23 @@ int run(struct hash_table* table, const char* filename){
         while ( ( star = fgetc( file ) )!= EOF && !isspace( star ) ){
             count++;
         }
+        if( star == EOF ){
+            free(my_element);
+            //printf("end\n");
+            break;
+        }
         fseek( file, temp, SEEK_SET );
-        my_element->word = malloc( sizeof ( char ) * count );
+        my_element->word = malloc( sizeof ( char ) * count + 1 );
         if ( ! my_element->word ){
             fprintf(stderr, "ERROR: malloc failed \n");
             exit(0);
         }
-        my_element->length = count;
+        memset ( my_element->word, 0, sizeof( char ) * count + 1 );
+        my_element->length = count + 1;
         fscanf( file, "%s", my_element->word );
         //printf("%s\n", my_element->word);
         hash_insert( my_element, table );
-        if( star == EOF ){
-            //printf("end\n");
-            break;
-        }
+        
     }
     fclose(file);
     return 1;
