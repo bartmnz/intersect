@@ -78,12 +78,21 @@ struct bst_tree* hash_strip( struct hash_table* table ){
 }
 
 
-/* hashing function provided by WECHLIN 
- * @PARAM key -- value to be hashed
+/* Function creates a unique hash for an element : is case insensitive
+ * hashing function provided by WECHLIN 
+ * @PARAM value -- value to be hashed
  * @RETURN -- a unique value based on the input to be used as a hash index.
  */
-uint64_t wang_hash(const char* buf){
+uint64_t wang_hash(struct element* value){
     uint64_t key = 0;
+    char* buf = malloc ( sizeof( char ) * value->length );
+    if ( ! buf ){
+        fprintf(stderr, "ERROR: malloc failed \n");
+        return 0;
+    }
+    for( size_t i = 0; i < value->length; i++ ){
+        buf[i] = tolower( value->word[i] );
+    }
 	strncpy((char *)(&key), buf, sizeof(key));
 	key = (~key) + (key << 21); // key = (key << 21) - key - 1;
 	key = key ^ (key >> 24);
@@ -92,6 +101,7 @@ uint64_t wang_hash(const char* buf){
 	key = (key + (key << 2)) + (key << 4); // key * 21
 	key = key ^ (key >> 28);
 	key = key + (key << 31);
+	free( buf );
 	return key;
 }
 
@@ -108,7 +118,7 @@ int hash_insert(struct element *value, struct hash_table* table){
         return 0;
     }
     int index = 0;
-    index = wang_hash(value->word) % table->capacity;  //hash value of element
+    index = wang_hash(value) % table->capacity;  //hash value of element
     if ( table->data[index] && table->data[index]->value->count == value->count-1 ){
         table->data[index]->value->count = value->count;
     } else if ( value->count == 1 ){
@@ -149,6 +159,7 @@ int run(struct hash_table* table, const char* filename){
         }
         fseek( file, temp, SEEK_SET );
         my_element->word = malloc( sizeof ( char ) * count );
+        my_element->length = count;
         fscanf( file, "%s", my_element->word );
         hash_insert( my_element, table );
     }
