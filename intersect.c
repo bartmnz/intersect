@@ -149,7 +149,24 @@ uint64_t wang_hash(struct element* value){
  * @RETURN -- true if strings are the same
  */
 bool same_word(struct element *value, struct element *string2){
-    if ( ! value || ! string2 ){
+    if( value->length != string2->length ){
+        return false;
+    }
+    
+    // code found on stack overflow 
+    //http://stackoverflow.com/questions/5820810/case-insensitive-string-comp-in-c
+    const char *a, *b;
+    a = value->word;
+    b = string2->word;
+    printf("(%s) (%s)", a, b);
+    for (;; a++, b++) {
+        int d = tolower(*a) - tolower(*b);
+        if (d != 0 || !*a)
+            printf( (! d) ? "True\n" : "False\n");
+            return ! d;
+    }
+    
+    /*if ( ! value || ! string2 ){
         fprintf( stderr, "ERROR: aborting\n");
         return false;
     } else if( value->length != string2->length ){
@@ -178,6 +195,7 @@ bool same_word(struct element *value, struct element *string2){
     free( buf2 );
     
     return rValue;
+    */
 }
 
 
