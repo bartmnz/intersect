@@ -15,14 +15,22 @@ int bst_prune(struct bst_tree* bonsai){
     if( bonsai->left ){
         bst_prune(bonsai->left);
     }
-    fprintf(stdout, "%s\n", bonsai->value->word);
+    if ( bonsai->value ){
+        fprintf(stdout, "%s\n", bonsai->value->word);    
+    } else{
+        fprintf(stdout, "NO MATCHES FOUND!!\n");
+    }
     if( bonsai->right ){
         bst_prune( bonsai->right );
     }
     bonsai->left = NULL;
     bonsai->right = NULL;
-    free(bonsai->value->word);
-    free(bonsai->value);
+    if ( bonsai->value ){
+        if( bonsai->value->word ){
+            free(bonsai->value->word);
+        }
+        free(bonsai->value);
+    }
     free(bonsai);
     return 1;
 }
@@ -134,8 +142,9 @@ uint64_t wang_hash(struct element* value){
     */
     strncpy((char *)(&key), value->word, sizeof(key));
     char *a = (char*)(&key);
-    for (;; a++) {
+    for (size_t count = 0 ; count < sizeof(key) ; a++) {
         *a = tolower(*a);
+        count++;
         if ( !*a )
             break;
     }
@@ -167,12 +176,13 @@ bool same_word(struct element *value, struct element *string2){
     const char *a, *b;
     a = value->word;
     b = string2->word;
-    for (;; a++, b++) {
+    for (size_t count = 0; count < value->length; count++, a++, b++) {
         int d = tolower(*a) - tolower(*b);
-        if (d != 0 || !*a){
-            return ! d;
+        if (d != 0 ){
+            return false;
         }
     }
+    return true;
     
     /*if ( ! value || ! string2 ){
         fprintf( stderr, "ERROR: aborting\n");
@@ -227,6 +237,7 @@ int hash_insert(struct element *element, struct hash_table* table){
         do{
             if( same_word( element, hash->value ) ){ //got the same word
                 if ( hash->value->count + 1 == element->count ){
+                    printf("incrementing one\n");
                     hash->value->count++;
                 }
                // printf("free index (%d), value (%s)\n", index, element->word);
@@ -316,7 +327,7 @@ int run(struct hash_table* table, const char* filename){
                 break;
             }
         }
-        if( star == EOF ){//&& ftell( file ) == temp ){
+        if( star == EOF && ftell( file ) == temp ){
             //printf("(%ld) (%ld)\n", temp, ftell( file ));
             free(my_element);
             break;
