@@ -47,7 +47,7 @@ void bst_insert( struct bst_tree *tree, struct element *element){
     }
     if ( ! tree->value ){
         tree->value = element;
-    }else if(  strncmp( tree->value->word, element->word, element->length )  > 0 ){
+    }else if(  strncasecmp( tree->value->word, element->word, element->length )  > 0 ){
         if ( tree->left ){
             bst_insert( tree->left, element );
         }else {
@@ -237,7 +237,7 @@ int hash_insert(struct element *element, struct hash_table* table){
         do{
             if( same_word( element, hash->value ) ){ //got the same word
                 if ( hash->value->count + 1 == element->count ){
-                    printf("incrementing one\n");
+                    //printf("incrementing one\n");
                     hash->value->count++;
                 }
                // printf("free index (%d), value (%s)\n", index, element->word);
