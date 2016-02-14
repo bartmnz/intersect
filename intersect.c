@@ -16,7 +16,7 @@ int bst_prune(struct bst_tree* bonsai){
         bst_prune(bonsai->left);
     }
     if ( bonsai->value ){
-        fprintf(stdout, "%s\n", bonsai->value->word);    
+       // fprintf(stdout, "%s\n", bonsai->value->word);    
     } else{
         fprintf(stdout, "NO MATCHES FOUND!!\n");
     }
@@ -131,15 +131,6 @@ struct bst_tree* hash_strip( struct hash_table* table ){
  */
 uint64_t wang_hash(struct element* value){
     uint64_t key = 0;
-    /*char* buf = malloc ( sizeof( char ) * value->length );
-    if ( ! buf ){
-        fprintf(stderr, "ERROR: malloc failed \n");
-        return 0;
-    }
-    for( size_t i = 0; i < value->length; i++ ){
-        buf[i] = tolower( value->word[i] );
-    }
-    */
     strncpy((char *)(&key), value->word, sizeof(key));
     char *a = (char*)(&key);
     for (size_t count = 0 ; count < sizeof(key) ; a++) {
@@ -183,37 +174,6 @@ bool same_word(struct element *value, struct element *string2){
         }
     }
     return true;
-    
-    /*if ( ! value || ! string2 ){
-        fprintf( stderr, "ERROR: aborting\n");
-        return false;
-    } else if( value->length != string2->length ){
-        return false;
-    }
-    char* buf1 = malloc ( sizeof( char ) * value->length );
-    if ( ! buf1 ){
-        fprintf( stderr, "ERROR: aborting\n");
-        return false;
-    }
-    for( size_t i = 0; i < value->length; i++ ){
-        buf1[i] = tolower( value->word[i] );
-    }
-    
-    char* buf2 = malloc ( sizeof( char ) * string2->length );
-    if ( ! buf2 ){
-        fprintf( stderr, "ERROR: aborting\n");
-        free( buf1 );
-        return false;
-    }
-    for( size_t i = 0; i < string2->length; i++ ){
-        buf2[i] = tolower( string2->word[i] );
-    }
-    bool rValue = !strncmp( buf1, buf2, value->length );
-    free( buf1 );
-    free( buf2 );
-    
-    return rValue;
-    */
 }
 
 
@@ -237,10 +197,8 @@ int hash_insert(struct element *element, struct hash_table* table){
         do{
             if( same_word( element, hash->value ) ){ //got the same word
                 if ( hash->value->count + 1 == element->count ){
-                    //printf("incrementing one\n");
                     hash->value->count++;
                 }
-               // printf("free index (%d), value (%s)\n", index, element->word);
                 free(element->word);
                 free(element);
                 return(1);
@@ -262,7 +220,6 @@ int hash_insert(struct element *element, struct hash_table* table){
             memset( hash->next, 0, sizeof( *hash->next ) );
             hash->next->value = element;
         }else {
-           // printf("free index (%d), value (%s)\n", index, element->word);
             free(element->word);
             free(element);
         }
@@ -278,11 +235,9 @@ int hash_insert(struct element *element, struct hash_table* table){
         table->data[index] = hash;
         
     } else{ // we don't need this info. 
-        //printf("free index (%d), value (%s)\n", index, element->word);
         free(element->word);
         free(element);
     }
-    //printf("index (%d), value (%s)\n", index, element->word);
     return 1;
 }
 
@@ -328,18 +283,17 @@ int run(struct hash_table* table, const char* filename){
             }
         }
         if( star == EOF && ftell( file ) == temp ){
-            //printf("(%ld) (%ld)\n", temp, ftell( file ));
             free(my_element);
             break;
         }
         fseek( file, temp, SEEK_SET );
-        my_element->word = malloc( sizeof ( char ) * count + 1 );
+        my_element->word = malloc( sizeof ( char ) * count +  5);
         if ( ! my_element->word ){
             fprintf(stderr, "ERROR: malloc failed \n");
             free( my_element );
             exit(0);
         }
-        memset ( my_element->word, 0, sizeof( char ) * count + 1 );
+        memset ( my_element->word, 0, sizeof( char ) * count + 5 );
         my_element->length = count + 1;
         fscanf( file, "%s", my_element->word );
         //fseek( file, 1, SEEK_CUR);
@@ -376,7 +330,6 @@ size_t how_big(const char* filename){
         }
     }
     fclose(file);
-    //printf("%zu\n", count );
     return count + count % 3;
 }
 
@@ -408,10 +361,8 @@ int main(int argc, char*argv[]){
     }
     memset( table->data, 0, sizeof( *table->data ) * table->capacity );
     for ( int i = 1; i < argc; i++ ){
-       // printf("(%d)\n",i);
         run( table, argv[i] );
     }
-    printf("bst\n");
     struct bst_tree* bonsai = hash_strip(table);
     bst_prune(bonsai);
 }
